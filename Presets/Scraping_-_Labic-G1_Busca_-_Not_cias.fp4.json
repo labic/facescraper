@@ -1,0 +1,48 @@
+{
+  "name": "G1: Busca - Not\u00edcias",
+  "category": "Scraping - Labic",
+  "description": "Configura\u00e7\u00e3o para scraping de resultados de busca, filtrando apenas para links de not\u00edcias",
+  "module": "Generic",
+  "options": {
+    "basepath": "https://g1.globo.com/",
+    "resource": "/busca",
+    "params": {
+      "order": "recent",
+      "q": "<Object ID>",
+      "species": "not\u00edcias"
+    },
+    "extension": "",
+    "headers": {},
+    "verb": "GET",
+    "format": "text",
+    "filename": "<None>",
+    "fileext": "<None>",
+    "pages": 100,
+    "paging_type": "count",
+    "param_paging": "page",
+    "offset_start": 1,
+    "offset_step": 1,
+    "nodedata": "text|css:li.widget.widget--card.widget--info",
+    "objectid": "text|css:div.widget--info__text-container > a|xpath:@href",
+    "scope": "",
+    "proxy": "",
+    "auth_type": "Disable",
+    "auth_uri": "",
+    "redirect_uri": "",
+    "token_uri": "",
+    "auth": "disable",
+    "auth_tokenname": "",
+    "auth_prefix": ""
+  },
+  "speed": 200,
+  "saveheaders": true,
+  "timeout": 15,
+  "maxsize": 5,
+  "columns": [
+    "titulo=text|css:a > div.widget--info__title.product-color|xpath:string()",
+    "resumo=text|css:.widget--info__description > span|xpath:string()",
+    "data=text|css:div.widget--info__text-container > a > div.widget--info__meta|xpath:string()",
+    "fonte=text|css:div.widget--info__text-container > div|xpath:string()",
+    "busca_noticias"
+  ]
+}
