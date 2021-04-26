@@ -9,6 +9,7 @@ import sys
 from datetime import datetime
 from datetime import timedelta
 from pandas.api.types import is_datetime64_any_dtype as is_datetime
+from pathlib import Path
 
 #Função para recortar intervalos de data solicitados pelo usuário.
 def crop_dates(dataset = None, first_check=False):
@@ -749,13 +750,6 @@ def clean_search():
             
             else:
                 df_filtered.at[i, 'data'] = datetime.strptime(row['data'], '%d/%m/%Y %Hh%M')
-            
-            
-        #Uniformizando todas as datas como um objeto datetime:
-        
-        
-        #Consertar aqui:    
-        df_filtered['data'] = pd.to_datetime(df_filtered['data']) - timedelta(hours = 3)
 
     #Caso o usuário não tenha realizado a coleta recentemente:
     if not ans_recent_date:
@@ -822,13 +816,13 @@ def clean_search():
                         df_filtered.at[i, 'data'] = true_time
 
                 elif row['data'] == 'há poucos instantes':
-                    delta = timedelta(days = 7)
-                    true_time = most_recent_date - delta
+                    true_time = most_recent_date
                     df_filtered.at[i, 'data'] = true_time
 
                 else:
                     true_time = datetime.strptime(row['data'], "%d/%m/%Y %Hh%M")
                     df_filtered.at[i, 'data'] = true_time
+            print('oi')
         #O usuário escolheu não aproximar as datas relativas
         else:
             ans_keep_bad_dates = check_y_or_n('Você gostaria de manter as datas relativas originais? (ex.:"há 1 hora", "há 2 dias")\n\n')
@@ -840,9 +834,6 @@ def clean_search():
             #O escolheu não aproximar e não quer manter as datas relativas
             else:
                 df_filtered['data'] = pd.to_datetime(df_filtered['data'], format= '%d/%m/%Y %Hh%M', errors = 'coerce')
-
-    # Convertendo as datas em uma série de datetime:
-    df_filtered.loc[:,'data'] = pd.to_datetime(df_filtered.loc[:,'data']) - timedelta (hours=3) #precisa consertar o offset de 3 horas
     
     #Recortando as datas em um intervalo de tempo a ser definido pelo usuário:
     if crop_dates(first_check = True):
@@ -853,8 +844,8 @@ def clean_search():
                             inplace=True, ascending=False)
 
     # Convertendo as datas do datetime para o padrão desejado
-    #df_filtered['data'] = df_filtered['data'].dt.strftime(
-    #            '%d/%m/%Y %H:%M:%S')
+    df_filtered['data'] = pd.to_datetime(df_filtered['data'])
+    df_filtered['data'] = df_filtered.data.dt.strftime('%d/%m/%Y %H:%M:%S')
 
     #print('\nAs datas foram reformatadas com sucesso\n')
 
@@ -866,13 +857,13 @@ def clean_search():
         'Você deseja manter o cabeçalho do arquivo .csv? (A primeira linha, com o nome das opções escolhidas.)')
     
     df_filtered = df_filtered.loc[:,['object_id','titulo','resumo','data','fonte']]
-    df_filtered = df_filtered.drop_duplicates(subset = 'object_id', ignore_index = True)
+    df_filtered = df_filtered.drop_duplicates(subset = 'titulo', ignore_index = True)
     # Se o usuário pediu para manter o cabeçalho:
     if ans:
         #Renomeando a coluna dos links
         df_filtered.rename(columns={'object_id': 'link'}, inplace = True)
         df_filtered.to_csv(
-            path_or_buf=path_out, quotechar='"', sep=';', encoding='utf-8-sig', index=False, header=True, date_format = '%d/%m/%Y %H:%M:%S')
+            path_or_buf=path_out, quotechar='"', sep=';', encoding='utf-8-sig', index=False, header=True)
 
     # Se o usuário não quer manter o cabeçalho:
     else:
