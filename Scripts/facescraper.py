@@ -25,7 +25,17 @@ def crop_dates(dataset = None, first_check=False):
         user_time_format = '%d-%m-%Y'
         
         #Gerando uma lista de nomes de colunas que possuem dados do tipo datetime
-        list_date_columns =[column_name for column_name in dataset.columns if is_datetime(dataset[column_name])]
+        list_date_columns = []
+        for column_name in dataset.columns:
+            try:
+                pd.to_datetime(dataset[column_name])
+                list_date_columns.append(column_name)
+                    
+            except TypeError:
+                continue
+            except ValueError:
+                continue
+        list_date_columns =[column_name for column_name in dataset.columns if dataset[column_name].astype(str).str.match(r'\d{4}-\d{2}-\d{2} \d{2}\:\d{2}\:\d{2}').all()]
         
         #Se essa lista não estiver vazia:
         if len(list_date_columns) > 1:
@@ -94,8 +104,15 @@ def crop_dates(dataset = None, first_check=False):
                 break
             #test
         clean_sorted_date = clean_date.sort_values(by = date_column_name, ascending=False).reset_index(drop=True)
-        mask_up_from_end = clean_sorted_date[date_column_name].dt.tz_localize(None) >= end_interval.tz_localize(None) #Precisa remover o timezone pra comparação dar certo
-        mask_down_from_beginning = clean_sorted_date[date_column_name].dt.tz_localize(None) <= beginning_interval.tz_localize(None)
+        
+        #Formata a série de datas do dataframe clean_date para o tipo Timestamp correto e retira a timezone p/ a comparação dar certo
+        clean_date_format_no_tz = pd.to_datetime(clean_sorted_date[date_column_name], format = '%Y-%m-%d %H:%M:%S').dt.tz_localize(None)
+        
+        #Comparando as datas na série clean_date com as datas dos limites escolhidos pelo usuário 
+        mask_up_from_end = clean_date_format_no_tz >= end_interval.tz_localize(None)
+        mask_down_from_beginning = clean_date_format_no_tz <= beginning_interval.tz_localize(None)
+        
+        #Fazendo a interseção das duas máscaras para obter um intervalo fechado
         mask_final_crop = mask_up_from_end & mask_down_from_beginning
         cropped_date = clean_sorted_date[mask_final_crop].reset_index(drop=True)
         
@@ -149,7 +166,7 @@ def make_dirs(dataset_type, suffix):
 
     # Se não for encontrado nenhum arquivo csv, gera um mensagem de erro.
     if not all_files:
-        print("Erro. Não existem arquivos de dataset nesta pasta. Reiniciando o programa.")
+        print("\n\nErro. Não existem arquivos de dataset nesta pasta. Reiniciando o programa.")
         return(0)  # sai da função e retorna ao menu principal
 
     # Criando um dicionáario para organizar os arquivos csv
@@ -265,7 +282,11 @@ def clean_articles():
 
     # Saída de make_dirs: return(selected_file, x_dir_name)
     # selected_file é o path do arquivo de entrada e x_dir_name é o path do diretório de saída
-    selected_file, x_dir_name = make_dirs('artigos', '_artigo')
+    try:
+        selected_file, x_dir_name = make_dirs('artigos', '_artigo')
+    except TypeError:
+        #Não existem arquivos compativeis
+        return()
 
     # Lendo o dataset resultante do preset de Artigos do Facepager
 
@@ -298,7 +319,8 @@ def clean_articles():
         print("7 ---- Data de atualização da matéria.")
         print("8 ---- Fonte.")
         print("9 ---- Gerar arquivos de texto para cada matéria, este arquivo de texto conterá o texto do corpo da matéria.\nOs arquivos de texto serão salvos em uma pasta separada, o formato será do tipo .txt")
-        print("10 ---- Todas as opções acima, menos a opção '9' (opção que gera arquivos de texto).")
+        print("10 ---- Gerar um arquivo de texto fundindo o texto de todas as matérias.")
+        print("11 ---- Todas as opções acima, menos as opções '9' e '10' (não serão gerados arquivos de texto .txt).")
 
         sel_options = input(
             "\n\nSelecione as opções desejadas, lembre-se que, caso haja mais de uma opção, você deve separar os números por vírgula: ")
@@ -321,7 +343,7 @@ def clean_articles():
     
     #Se foram selecionadas todas as opções:
     if sel_options == '':
-        options_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+        options_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9','10', '11']
     
     #Se foram selecionadas opções específicas:
     else:
@@ -340,7 +362,7 @@ def clean_articles():
 
     # Reorganizando um novo dataframe a partir das opções selecionadas pelo usuário
 
-    if '10' in options_list:
+    if '11' in options_list:
         # Se o usuário escolher a opção de selecionar todas as opções:
         options_list = ['1', '2', '3', '4', '5', '6', '7', '8']
 
@@ -368,7 +390,7 @@ def clean_articles():
         # adicionando nova coluna ao dataframe
         output_df = pd.concat([output_df, df_data["subtitulo"]], axis=1)
 
-    if '5' in options_list or '9' in options_list:
+    if '5' in options_list or '9' or '10' in options_list:
         # Criando lista temporária para armazenar os textos
         st_contents = []
 
@@ -447,7 +469,7 @@ def clean_articles():
         # Os arquivos de texto serão nomeados de acordo com o título da matéria
         titulo = ''
 
-        char_especial = re.compile(r'[\\\/*?:"<>|]')
+        char_especial = re.compile(r'[\\\/*?:"<>|]') #criando objeto regex pra remover caracteres especiais
         dir_text_nm = os.path.join(x_dir_name+'\\textos')
         os.mkdir(dir_text_nm)
         # Montando cada arquivo de texto novo, a partir do dataset processado pelo Facepager
@@ -456,7 +478,7 @@ def clean_articles():
             titulo = df_data['titulo'].iloc[i]
 
             if char_especial.findall(titulo):
-                titulo = char_especial.sub(' ', titulo)
+                titulo = char_especial.sub(' ', titulo) #removendo caracteres especiais
 
             # Montando o PATH de saída
             path_out_txt = os.path.join(dir_text_nm, (titulo + ".txt"))
@@ -464,7 +486,23 @@ def clean_articles():
             with open(path_out_txt, 'w', encoding="utf-8") as txt_file:
                 # st_contents.append(texto) #Salva numa lista de textos
                 txt_file.write(st_contents[i])
-
+        
+    if '10' in options_list:
+        
+        # Montando cada arquivo de texto novo, a partir do dataset processado pelo Facepager
+        search_term = x_dir_name.split('\\')
+        search_term = filenames[-1]
+        
+        # Montando o PATH de saída
+        path_out_all_txt = os.path.join(x_dir_name, (search_term + ".txt"))
+        
+        # Criando um objeto file para escrever um arquivo txt
+        with open(path_out_all_txt, 'w', encoding="utf-8") as txt_file:
+            # st_contents.append(texto) #Salva numa lista de textos
+            all_text = '/n/n'.join(st_contents)
+            all_text = 'text\n' + all_text
+            txt_file.write(all_text)
+            
     # Determinando os nomes dos campos que estão disponíveis para serem ordenados pelo usuário
     chsn_fields = output_df.columns.values.tolist()
     selectable_fields = []
@@ -626,8 +664,12 @@ def extract_urls():
 
     # Saída de make_dirs: return(selected_file, x_dir_name)
     # selected_file é o path do arquivo de entrada e x_dir_name é o path do diretório de saída
-    selected_file, x_dir_name = make_dirs('busca_noticias', '_busca_url')
-
+    try:
+        selected_file, x_dir_name = make_dirs('busca_noticias', '_busca_url')
+    except TypeError:
+        #Não existem arquivos compativeis
+        return()
+    
     # Lendo o dataset resultante do preset de Busca do Facepager
     df = pd.read_csv(selected_file, sep=';')
 
@@ -682,7 +724,12 @@ def clean_search():
 
     # Saída de make_dirs: return(selected_file, x_dir_name)
     # selected_file é o path do arquivo de entrada e x_dir_name é o path do diretório de saída
-    selected_file, x_dir_name = make_dirs('busca_noticias', '_busca')
+    
+    try:
+        selected_file, x_dir_name = make_dirs('busca_noticias', '_busca')
+    except TypeError:
+        #Não existem arquivos compativeis
+        return()
 
     # Lendo o dataset resultante do preset de Busca do Facepager
     df = pd.read_csv(selected_file, sep=';')
@@ -835,6 +882,9 @@ def clean_search():
             else:
                 df_filtered['data'] = pd.to_datetime(df_filtered['data'], format= '%d/%m/%Y %Hh%M', errors = 'coerce')
     
+    #Selecionando apenas as colunas úteis
+    df_filtered = df_filtered.loc[:,['object_id','titulo','resumo','data','fonte']]
+    
     #Recortando as datas em um intervalo de tempo a ser definido pelo usuário:
     if crop_dates(first_check = True):
         df_filtered = crop_dates(df_filtered)
@@ -856,7 +906,6 @@ def clean_search():
     ans = check_y_or_n(
         'Você deseja manter o cabeçalho do arquivo .csv? (A primeira linha, com o nome das opções escolhidas.)')
     
-    df_filtered = df_filtered.loc[:,['object_id','titulo','resumo','data','fonte']]
     df_filtered = df_filtered.drop_duplicates(subset = 'titulo', ignore_index = True)
     # Se o usuário pediu para manter o cabeçalho:
     if ans:
