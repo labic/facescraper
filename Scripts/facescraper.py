@@ -456,8 +456,8 @@ def clean_articles():
         for i in range(len(df_data['fonte'])):
             fonte = df_data['fonte'].iloc[i]
             if not pd.isna(fonte):
-                if re.search(r'G1.+', fonte):
-                    fonte = re.search(r'G1.+', fonte).group(0)
+                if re.search(r'^(Por\s)(.+)', fonte):
+                    fonte = re.search(r'^(Por\s)(.+)', fonte).group(2)
             fontes_li.append(fonte)
 
         # Salvando a lista de fontes em um dataframe temporário
@@ -491,7 +491,7 @@ def clean_articles():
         
         # Montando cada arquivo de texto novo, a partir do dataset processado pelo Facepager
         search_term = x_dir_name.split('\\')
-        search_term = filenames[-1]
+        search_term = search_term[-1]
         
         # Montando o PATH de saída
         path_out_all_txt = os.path.join(x_dir_name, (search_term + ".txt"))
@@ -506,7 +506,11 @@ def clean_articles():
     # Determinando os nomes dos campos que estão disponíveis para serem ordenados pelo usuário
     chsn_fields = output_df.columns.values.tolist()
     selectable_fields = []
-
+    
+    #Caso o usuário não tenha escolhido algum dado a ser colocado em uma tabela, sai da função.
+    if len(chsn_fields) == 0:
+        return()
+    
     # Atribuindo os nomes correspondentes às colunas
     for i in range(len(chsn_fields)):
         if chsn_fields[i] == 'link':
@@ -538,13 +542,8 @@ def clean_articles():
         if crop_dates(first_check = True):
             output_df = crop_dates(output_df)
     
-    # Selecionando as opções para organizar o dataset de acordo com um valor:
-    print("É possível ordenar o dataset de acordo com os seguintes campos:")
-    for i in range(len(chsn_fields)):
-        print(f'{i+1}- Por {selectable_fields[i]}')
-
     ans_sort_yn = check_y_or_n(
-        "Você deseja ordenar o dataset de acordo com algum dos campos acima?")
+        "Você deseja ordenar o dataset de acordo com algum campo ou tipo de dado?")
 
     # Caso exista alguma data, o padrão seria ordenar pela data primeiro, mesmo sem a escolha específica do usuário
     if not ans_sort_yn:
