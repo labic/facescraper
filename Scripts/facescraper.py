@@ -301,8 +301,9 @@ def clean_articles():
     # Resetando o índice após manipular o dataframe
     df_data.reset_index(drop=True, inplace=True)
 
-    # Requisitando permissão do usuário para salvar o dataset filtrado, com todos os dados relevantes.
-
+    #Listando as opções disponíveis ao usuário
+    selectable_options = ['1', '2', '3', '4','5','6','7','8','9','10','11','12','13','14','15']
+    
     while True:
 
         # Listando as opções para que o usuário crie um dataset customizado
@@ -310,17 +311,21 @@ def clean_articles():
         print("--------Você pode selecionar mais do que uma opção, basta separar os números com vírgula:--------\n")
         print("***********PARA SELECIONAR TODAS AS OPÇÕES ABAIXO, PRESSIONE A TECLA 'ENTER'***********\n\n")
 
-        print("1 ---- Link da matéria original.")
-        print("2 ---- Links de outras matérias que foram referenciadas no texto do artigo.")
-        print("3 ---- Título.")
-        print("4 ---- Subtítulo.")
-        print("5 ---- Conteúdo do artigo, em texto.")
-        print("6 ---- Data de publicação da matéria.")
-        print("7 ---- Data de atualização da matéria.")
-        print("8 ---- Fonte.")
-        print("9 ---- Gerar arquivos de texto para cada matéria, este arquivo de texto conterá o texto do corpo da matéria.\nOs arquivos de texto serão salvos em uma pasta separada, o formato será do tipo .txt")
-        print("10 ---- Gerar um arquivo de texto fundindo o texto de todas as matérias.")
-        print("11 ---- Todas as opções acima, menos as opções '9' e '10' (não serão gerados arquivos de texto .txt).")
+        print(f"{selectable_options[0]} ---- Link da matéria original.")
+        print(f"{selectable_options[1]} ---- Links de outras matérias que foram referenciadas no texto do artigo.")
+        print(f"{selectable_options[2]} ---- Título.")
+        print(f"{selectable_options[3]} ---- Subtítulo.")
+        print(f"{selectable_options[4]} ---- Conteúdo do artigo, em texto.")
+        print(f"{selectable_options[5]} ---- Data de publicação da matéria.")
+        print(f"{selectable_options[6]} ---- Data de atualização da matéria.")
+        print(f"{selectable_options[7]} ---- Fonte.")
+        print(f"{selectable_options[8]} ---- Autor.")
+        print(f"{selectable_options[9]} ---- Imagens.")
+        print(f"{selectable_options[10]} ---- Highlights.")
+        print(f"{selectable_options[11]} ---- Olho.")
+        print(f"{selectable_options[12]} ---- Gerar arquivos de texto para cada matéria, este arquivo de texto conterá o texto do corpo da matéria.\nOs arquivos de texto serão salvos em uma pasta separada, o formato será do tipo .txt")
+        print(f"{selectable_options[13]} ---- Gerar um arquivo de texto fundindo o texto de todas as matérias.")
+        print(f"{selectable_options[14]} ---- Todas as opções acima, menos as opções '13' e '14' (não serão gerados arquivos de texto .txt).")
 
         sel_options = input(
             "\n\nSelecione as opções desejadas, lembre-se que, caso haja mais de uma opção, você deve separar os números por vírgula: ")
@@ -334,8 +339,17 @@ def clean_articles():
             print(
                 "\n----Foram selecionadas todas as opções.----\n\n")
             break
-
+        
+        #Checando se os números digitados são válidos
+        if not set(sel_options.split(',')).issubset(selectable_options):
+            wrong_num = set(sel_options) - set(selectable_options)
+            wrong_num = list(wrong_num)
+            print(f'\nAs opções: {" ".join(wrong_num)} não são válidas. Tente novamente.\n')
+            continue
+    
+        
         else:
+            
             print(f'As opções selecionadas foram: {sel_options}\n\n')
             break
 
@@ -343,7 +357,7 @@ def clean_articles():
     
     #Se foram selecionadas todas as opções:
     if sel_options == '':
-        options_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9','10', '11']
+        options_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9','10', '11', '12']
     
     #Se foram selecionadas opções específicas:
     else:
@@ -352,19 +366,11 @@ def clean_articles():
 
     # Criando dataframe de saída
     output_df = pd.DataFrame()
-    
-    # Checando se o usuário gostaria de recortar um intervalo de datas
-    # if crop_dates(first_check = True):
-    #     df_data['data_at'] = pd.to_datetime(df_data['data_at'], infer_datetime_format= True)
-    #     df_data['data_pub'] = pd.to_datetime(df_data['data_pub'], infer_datetime_format= True)
-    #     df_data = crop_dates(df_data)
-
 
     # Reorganizando um novo dataframe a partir das opções selecionadas pelo usuário
-
-    if '11' in options_list:
+    if '15' in options_list:
         # Se o usuário escolher a opção de selecionar todas as opções:
-        options_list = ['1', '2', '3', '4', '5', '6', '7', '8']
+        options_list = ['1', '2', '3', '4', '5', '6', '7', '8','9','10','11','12','13','14']
 
     if '1' in options_list:
         # Criando uma coluna no novo dataset para o link original da matéria, armazenado no dataset original
@@ -390,7 +396,7 @@ def clean_articles():
         # adicionando nova coluna ao dataframe
         output_df = pd.concat([output_df, df_data["subtitulo"]], axis=1)
 
-    if '5' in options_list or '9' or '10' in options_list:
+    if '5' in options_list or '13' or '14' in options_list:
         # Criando lista temporária para armazenar os textos
         st_contents = []
 
@@ -406,13 +412,16 @@ def clean_articles():
                 # Procura um ';' sozinho e substitui deixando apenas o caractere anterior e o posterior
                 texto = re.sub(r"([^;]);([^;])", r"\1\2", texto)
                 # Procura um grupo de 2 a 4 ';' e substitui por duas novas linhas
-                texto = re.sub(r"([^;]);{2,4}([^;])", r"\1\n\n\2", texto)
+                texto = re.sub(r"([^;]);{2,5}([^;])", r"\1\n\n\2", texto)
                 # Remove os teasers de vídeo do final
                 texto = re.sub(r"VÍDEOS\:.+;*", r"", texto)
                 # Remove os teasers de podcasts do final
                 texto = re.sub(r";.+podcast.+?;", r"", texto)
                 texto = re.sub(r";$", r"", texto)  # Remove o ';' do começo
-                st_contents.append(texto)  # Salva numa lista de textos
+            else:
+                texto = ''
+            
+            st_contents.append(texto)  # Salva numa lista de textos
 
     if '5' in options_list:
         # Exportando os textos armazenados previamente em uma lista para o dataframe
@@ -456,9 +465,12 @@ def clean_articles():
         for i in range(len(df_data['fonte'])):
             fonte = df_data['fonte'].iloc[i]
             if not pd.isna(fonte):
-                if re.search(r'^(Por\s)(.+)', fonte):
-                    fonte = re.search(r'^(Por\s)(.+)', fonte).group(2)
-            fontes_li.append(fonte)
+                if len(fonte.split(',')) > 1:
+                    fontes_li.append(fonte.split(',')[1])
+                else:
+                    fontes_li.append(fonte)
+            else:
+                fontes_li.append(fonte)
 
         # Salvando a lista de fontes em um dataframe temporário
         df_fontes = pd.DataFrame(fontes_li, columns=['fonte'])
@@ -466,6 +478,38 @@ def clean_articles():
         output_df = pd.concat([output_df, df_fontes], axis=1)
 
     if '9' in options_list:
+        # Criando uma lista para armazenar a coluna de fontes, a ser processada
+        autor_li = []
+
+        # Fazendo a leitura das fontes armazenadas no dataset do facepager, processando para o formato desejado
+        for i in range(len(df_data['fonte'])):
+            autor = df_data['fonte'].iloc[i]
+            if not pd.isna(autor):
+                if len(autor.split(',')) > 1:
+                    autor = (autor.split(','))[0]
+                    autor_li.append(autor)
+                else:
+                    autor_li.append('')
+            else:
+                autor_li.append('')
+        # Salvando a lista de fontes em um dataframe temporário
+        df_autor = pd.DataFrame(autor_li, columns=['autor'])
+        # Concatenando o dataframe temporário ao dataframe de saída
+        output_df = pd.concat([output_df, df_autor], axis=1)
+    
+    if '10' in options_list:
+        # Criando uma lista para armazenar a coluna de fontes, a ser processada
+        output_df = pd.concat([output_df, df_data["imagens"]], axis=1) 
+        
+    if '11' in options_list:
+        # Criando uma lista para armazenar a coluna de fontes, a ser processada
+        output_df = pd.concat([output_df, df_data["highlights"]], axis=1) 
+    
+    if '12' in options_list:
+        # Criando uma lista para armazenar a coluna de fontes, a ser processada
+        output_df = pd.concat([output_df, df_data["olho"]], axis=1) 
+        
+    if '13' in options_list:
         # Os arquivos de texto serão nomeados de acordo com o título da matéria
         titulo = ''
 
@@ -486,8 +530,10 @@ def clean_articles():
             with open(path_out_txt, 'w', encoding="utf-8") as txt_file:
                 # st_contents.append(texto) #Salva numa lista de textos
                 txt_file.write(st_contents[i])
+        print(f'\nA pasta contendo os arquivos de texto para cada matéria se encontra em: "{dir_text_nm}"')
         
-    if '10' in options_list:
+        
+    if '14' in options_list:
         
         # Montando cada arquivo de texto novo, a partir do dataset processado pelo Facepager
         search_term = x_dir_name.split('\\')
@@ -499,17 +545,14 @@ def clean_articles():
         # Criando um objeto file para escrever um arquivo txt
         with open(path_out_all_txt, 'w', encoding="utf-8") as txt_file:
             # st_contents.append(texto) #Salva numa lista de textos
-            all_text = '/n/n'.join(st_contents)
+            all_text = '\n\n'.join(st_contents)
             all_text = 'text\n' + all_text
             txt_file.write(all_text)
+        print(f'\nO arquivo único contendo todos os textos {search_term+".txt"} se encontra na pasta {x_dir_name}')
             
     # Determinando os nomes dos campos que estão disponíveis para serem ordenados pelo usuário
     chsn_fields = output_df.columns.values.tolist()
     selectable_fields = []
-    
-    #Caso o usuário não tenha escolhido algum dado a ser colocado em uma tabela, sai da função.
-    if len(chsn_fields) == 0:
-        return()
     
     # Atribuindo os nomes correspondentes às colunas
     for i in range(len(chsn_fields)):
@@ -534,13 +577,28 @@ def clean_articles():
         elif chsn_fields[i] == 'data_atualizacao':
             selectable_fields.append('Data de atualização da matéria')
 
+        elif chsn_fields[i] == 'autor':
+            selectable_fields.append('Autor da matéria')
+
         elif chsn_fields[i] == 'fonte':
             selectable_fields.append('Fonte')
+        
+        elif chsn_fields[i] == 'imagens':
+            selectable_fields.append('Links das imagens na matéria')
+        
+        elif chsn_fields[i] == 'highlights':
+            selectable_fields.append('Highlights do texto da matéria')
 
+        elif chsn_fields[i] == 'olho':
+            selectable_fields.append('Olho da matéria')
+    
     # Perguntando ao usuário se ele deseja recortar um intervalo de datas:
     if 'data_atualizacao' in output_df.columns or 'data_publicacao' in output_df.columns:
         if crop_dates(first_check = True):
             output_df = crop_dates(output_df)
+    
+    if not chsn_fields:
+        return()
     
     ans_sort_yn = check_y_or_n(
         "Você deseja ordenar o dataset de acordo com algum campo ou tipo de dado?")
