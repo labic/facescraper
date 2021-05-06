@@ -406,12 +406,18 @@ def clean_articles():
             # Pega o texto na coluna conteúdo, primeira linha
             texto = df_data["conteudo"].iloc[i]
             if not pd.isna(texto):    
+                # Remove o ';' que aparece entre duas frases
+                texto = re.sub(r'([\w]);([\W][^;])', r'\1\2', texto, re.UNICODE)
+                texto = re.sub(r'([^;][\W]);([\w])', r'\1\2', texto, re.UNICODE)
+                texto = re.sub(r'([.,!:"?]);([.,!:"?])', r'\1\2', texto, re.UNICODE)
                 # Removendo os caracteres residuais do texto
                 texto = re.sub(r"^;", r"", texto)  # Remove o ';' do começo
+                # Remove o ';' que aparece em torno de nomes destacados com links
+                texto = re.sub(r"(;)(\w{2,})(;)", r" \2 ", texto, re.UNICODE)
                 # Remove o ';' que aparece entre os itens de uma lista
                 texto = re.sub(r"(\.);([A-Z])", r"\1\n\n\2", texto)
                 # Procura um ';' sozinho e substitui deixando apenas o caractere anterior e o posterior
-                texto = re.sub(r"([^;]);([^;])", r"\1\2", texto)
+                texto = re.sub(r"([^;]);([^;])", r"\1 \2", texto)
                 # Procura um grupo de 2 a 4 ';' e substitui por duas novas linhas
                 texto = re.sub(r"([^;]);{2,5}([^;])", r"\1\n\n\2", texto)
                 # Remove os teasers de vídeo do final
@@ -419,6 +425,7 @@ def clean_articles():
                 # Remove os teasers de podcasts do final
                 texto = re.sub(r";.+podcast.+?;", r"", texto)
                 texto = re.sub(r";$", r"", texto)  # Remove o ';' do começo
+
             else:
                 texto = ''
             
