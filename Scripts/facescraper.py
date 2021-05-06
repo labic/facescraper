@@ -89,6 +89,7 @@ def crop_dates(dataset = None, first_check=False):
                 datetime.strptime(end_interval, user_time_format)
             except ValueError:
                 print(f'\n\nErro, a data digitada {end_interval} é inválida. Verifique o formato da data inserida e tente novamente.\n\n')
+                continue
             
             beginning_interval = datetime.strptime(beginning_interval, user_time_format) + timedelta(hours = 23, minutes = 59) #tem que adicionar o restante do porque o datetime gerado é para 0h
             beginning_interval = pd.to_datetime(beginning_interval, utc=True)
@@ -357,7 +358,7 @@ def clean_articles():
     
     #Se foram selecionadas todas as opções:
     if sel_options == '':
-        options_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9','10', '11', '12']
+        options_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9','10', '11', '12','13','14']
     
     #Se foram selecionadas opções específicas:
     else:
