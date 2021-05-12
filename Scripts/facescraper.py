@@ -184,7 +184,7 @@ def make_dirs(dataset_type, suffix):
             files_dict.update({i: file_path})
 
     print("\n\nOs arquivos disponíveis para processamento são:\n\n")
-    message: []  # A mensagem que será gerada de acordo com a localização do arquivo
+    message = []  # A mensagem que será gerada de acordo com a localização do arquivo
 
     for index, file_path in files_dict.items():
 
@@ -284,7 +284,7 @@ def clean_articles():
     # Saída de make_dirs: return(selected_file, x_dir_name)
     # selected_file é o path do arquivo de entrada e x_dir_name é o path do diretório de saída
     try:
-        selected_file, x_dir_name = make_dirs('artigos', '_artigo')
+        selected_file, x_dir_name = make_dirs('artigos', '_artigos')
     except TypeError:
         #Não existem arquivos compativeis
         return()
@@ -372,7 +372,38 @@ def clean_articles():
     if '15' in options_list:
         # Se o usuário escolher a opção de selecionar todas as opções:
         options_list = ['1', '2', '3', '4', '5', '6', '7', '8','9','10','11','12','13','14']
-
+        
+    if '5' in options_list or '13' in options_list or '14' in options_list:
+        select_parag = check_y_or_n('Você gostaria de selecionar parágrafos específicos do texto do corpo da matéria?')
+        
+        if select_parag:            
+                while True:
+                    print('\nEscolha abaixo, digitando o número da opção correspondente:\n\n')
+                    print('1 --- Primeiro parágrafo.')
+                    print('2 --- Primeiro e Segundo parágrafos.')
+                    print('3 --- Primeiro, Segundo e Terceiro parágrafos.')
+                    num_prg = input('Resposta: ')
+                    
+                    if not num_prg:
+                        print('Erro: Nenhuma opção foi selecionada. Tente novamente.')
+                    
+                    # Checando se existe algum caractere fora de números e ","
+                    elif num_prg == '1':
+                        num_prg = 1
+                        break
+                    
+                    elif num_prg == '2':
+                        num_prg = 2
+                        break
+                    
+                    elif num_prg == '3':
+                        num_prg = 3
+                        break
+                    
+                    else:
+                        print('Erro: Resposta inválida. Tente novamente.')
+                        continue                
+                
     if '1' in options_list:
         # Criando uma coluna no novo dataset para o link original da matéria, armazenado no dataset original
         # adicionando nova coluna ao dataset
@@ -407,6 +438,7 @@ def clean_articles():
             texto = df_data["conteudo"].iloc[i]
             if not pd.isna(texto):    
                 # Remove o ';' que aparece entre duas frases
+                
                 texto = re.sub(r'([\w]);([\W][^;])', r'\1\2', texto, re.UNICODE)
                 texto = re.sub(r'([^;][\W]);([\w])', r'\1\2', texto, re.UNICODE)
                 texto = re.sub(r'([.,!:"?]);([.,!:"?])', r'\1\2', texto, re.UNICODE)
@@ -418,10 +450,10 @@ def clean_articles():
                 texto = re.sub(r"(\.);([A-Z])", r"\1\n\n\2", texto)
                 # Procura um ';' sozinho e substitui deixando apenas o caractere anterior e o posterior
                 texto = re.sub(r"([^;]);([^;])", r"\1 \2", texto)
-                # Procura um grupo de 2 a 4 ';' e substitui por duas novas linhas
-                texto = re.sub(r"([^;]);{2,5}([^;])", r"\1\n\n\2", texto)
                 # Remove os teasers de vídeo do final
                 texto = re.sub(r"VÍDEOS\:.+;*", r"", texto)
+                # Procura um grupo de 2 a 4 ';' e substitui por duas novas linhas
+                texto = re.sub(r"([^;]);{2,5}([^;])", r"\1\n\n\2", texto)
                 # Remove os teasers de podcasts do final
                 texto = re.sub(r";.+podcast.+?;", r"", texto)
                 texto = re.sub(r";$", r"", texto)  # Remove o ';' do começo
@@ -429,6 +461,16 @@ def clean_articles():
             else:
                 texto = ''
             
+            #Caso o usuário tenha escolhido selecionar um número específico de parágrafos do texto
+            if select_parag:
+                texto = texto.split('\n\n')                
+                if len(texto) == 1:
+                    texto = texto[0]                
+                if len(texto) == 2:
+                    texto = '\n\n'.join([texto[0],texto[1]])
+                if len(texto) > 2:
+                    texto = '\n\n'.join([texto[0],texto[1],texto[2]])              
+                
             st_contents.append(texto)  # Salva numa lista de textos
 
     if '5' in options_list:
@@ -553,7 +595,7 @@ def clean_articles():
         # Criando um objeto file para escrever um arquivo txt
         with open(path_out_all_txt, 'w', encoding="utf-8") as txt_file:
             # st_contents.append(texto) #Salva numa lista de textos
-            all_text = '\n\n'.join(st_contents)
+            all_text = '\n\n\n'.join(st_contents)
             all_text = 'text\n' + all_text
             txt_file.write(all_text)
         print(f'\nO arquivo único contendo todos os textos {search_term+".txt"} se encontra na pasta {x_dir_name}')
@@ -730,7 +772,7 @@ def extract_urls():
     # Saída de make_dirs: return(selected_file, x_dir_name)
     # selected_file é o path do arquivo de entrada e x_dir_name é o path do diretório de saída
     try:
-        selected_file, x_dir_name = make_dirs('busca_noticias', '_busca_url')
+        selected_file, x_dir_name = make_dirs('busca_noticias', '_links')
     except TypeError:
         #Não existem arquivos compativeis
         return()
@@ -865,7 +907,9 @@ def clean_search():
 
     #Caso o usuário não tenha realizado a coleta recentemente:
     if not ans_recent_date:
-
+        
+        valid_for_crop = True
+               
         #Verifica se o usuário gostaria de aproximar as datas
         ans_approx_dates = check_y_or_n('Você gostaria de aproximar as datas relativas? (ex.:"há 1 hora", "há 2 dias")\n\n')
 
@@ -937,7 +981,20 @@ def clean_search():
             print('oi')
         #O usuário escolheu não aproximar as datas relativas
         else:
-            ans_keep_bad_dates = check_y_or_n('Você gostaria de manter as datas relativas originais? (ex.:"há 1 hora", "há 2 dias")\n\n')
+            
+            valid_for_crop = False
+            
+            # Normalizando os links
+            for i, row in (df_filtered).iterrows():
+                # Extrai a URL original a partir do padrão do website
+                link = re.search('&u=(.+?)&syn', row['object_id']).group(1)
+                link = link.replace('%3A', ':').replace('%2F', '/')
+
+                # Substitui a URL modificada no Dataframe
+                df_filtered.at[i, 'object_id'] = link
+                
+            
+            ans_keep_bad_dates = check_y_or_n('Você gostaria de manter as datas relativas originais? (ex.:"há 1 hora", "há 2 dias")\n Nesta opção, as datas imprecisas serão deletadas.\n')
             
             #O escolheu não aproximar e quer manter as datas relativas
             if ans_keep_bad_dates:
@@ -951,18 +1008,19 @@ def clean_search():
     df_filtered = df_filtered.loc[:,['object_id','titulo','resumo','data','fonte']]
     
     #Recortando as datas em um intervalo de tempo a ser definido pelo usuário:
-    if crop_dates(first_check = True):
-        df_filtered = crop_dates(df_filtered)
+    if valid_for_crop:
+        if crop_dates(first_check = True):
+            df_filtered = crop_dates(df_filtered)
+            
+            # Ordenando as datas em ordem descendente
+            df_filtered.sort_values(by='data',
+                                    inplace=True, ascending=False)
 
-    # Ordenando as datas em ordem descendente
-    df_filtered.sort_values(by='data',
-                            inplace=True, ascending=False)
+            # Convertendo as datas do datetime para o padrão desejado
+            df_filtered['data'] = pd.to_datetime(df_filtered['data'])
+            df_filtered['data'] = df_filtered.data.dt.strftime('%d/%m/%Y %H:%M:%S')
 
-    # Convertendo as datas do datetime para o padrão desejado
-    df_filtered['data'] = pd.to_datetime(df_filtered['data'])
-    df_filtered['data'] = df_filtered.data.dt.strftime('%d/%m/%Y %H:%M:%S')
-
-    #print('\nAs datas foram reformatadas com sucesso\n')
+            #print('\nAs datas foram reformatadas com sucesso\n')
 
     # Definindo o caminho de sáida do arquivo
     path_out = os.path.join(x_dir_name, (f"{folder_name}_prcs.csv"))
