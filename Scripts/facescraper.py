@@ -16,7 +16,7 @@ def crop_dates(dataset = None, first_check=False):
     
     if first_check == True:
         
-        user_ans = check_y_or_n('Você gostaria de selecionar apenas os resultados dentro uma data inicial e uma data final?')
+        user_ans = check_y_or_n('----> Você gostaria de selecionar apenas os resultados dentro uma data inicial e uma data final?')
         return (user_ans)
     
     else:            
@@ -42,13 +42,14 @@ def crop_dates(dataset = None, first_check=False):
 
             while True:
             
-                print('Existe mais de um campo contendo datas de tipos diferentes.\n\nEscolha qual coluna a ser considerada para selecionar o intervalo de dias:\n')
+                print('\n* Existe mais de um campo contendo datas de tipos diferentes. *')
+                print('\n----> Escolha qual coluna a ser considerada para selecionar o intervalo de dias:\n')
             
                 for i in range(len(list_date_columns)):
                     print(f'{i+1} - {list_date_columns[i]}')
                 
                 possible_ans = [str(k) for k in range(1, len(list_date_columns) + 1)]
-                ans_date_column = input("\n\nResposta:")
+                ans_date_column = input("\n\n----> Resposta:")
                 
                 if ans_date_column not in possible_ans:
                     print('\nA resposta selecionada é inválida, tente novamente.\n')
@@ -61,7 +62,7 @@ def crop_dates(dataset = None, first_check=False):
         else:
             date_column_name = list_date_columns[0]
 
-        print("Os intervalos de tempo disponíveis são:")
+        print("\nOs intervalos de tempo disponíveis são:\n")
         valid_dates_mask = dataset[date_column_name].notnull()
         clean_date = dataset[valid_dates_mask] #Pega as datas que não são NaN
         clean_date = clean_date.sort_values(by = date_column_name, ascending = False) #Ordena na ordem descendente
@@ -71,21 +72,21 @@ def crop_dates(dataset = None, first_check=False):
         most_distant_date_str = most_distant_date.strftime(user_time_format)
         
         while True:
-            print(f"A data mais recente da coleta é: {most_recent_date_str}")
-            print(f"A data mais distante da coleta é: {most_distant_date_str}")
+            print(f"- Data mais recente da coleta: {most_recent_date_str}")
+            print(f"- Data mais distante da coleta: {most_distant_date_str}")
             
-            print(f'Você deve seguinte este formato de data para inserir as datas desejadas: {user_example_format}')
+            print(f'\nVocê deve utilizar o seguinte formato de data para inserir as datas desejadas: {user_example_format}')
             
             #Verificando se o usuário inseriu um formato de data válido
             try:
-                beginning_interval = input('\nDigite a data de início do intervalo, ou seja, a data mais recente (utilize o formato de data especificado): ')              
+                beginning_interval = input('\n----> Digite a data mais recente do intervalo desejado (utilize o formato de data especificado): ')              
                 datetime.strptime(beginning_interval,user_time_format)
             except ValueError:
                 print(f'\n\nErro, a data digitada {beginning_interval} é inválida. Verifique o formato da data inserida e tente novamente.\n\n')
             
             #Verificando se o usuário inseriu um formato de data válido
             try:
-                end_interval = input('\nDigite a data do fim do intervalo, ou seja, a data mais distante (utilize o formato de data especificado): ')
+                end_interval = input('\nDigite a data mais distante do intervalo desejado (utilize o formato de data especificado): ')
                 datetime.strptime(end_interval, user_time_format)
             except ValueError:
                 print(f'\n\nErro, a data digitada {end_interval} é inválida. Verifique o formato da data inserida e tente novamente.\n\n')
@@ -96,10 +97,10 @@ def crop_dates(dataset = None, first_check=False):
             end_interval = datetime.strptime(end_interval, user_time_format)
             end_interval = pd.to_datetime(end_interval, utc=True)
             if beginning_interval.date() > most_recent_date.date() or beginning_interval.date() < most_distant_date.date():
-                print('\n\nErro, a data de ínicio está fora do intervalo do dataset.\n\n')
+                print('\n\n################ Erro, a data de ínicio está fora do intervalo do dataset ################\n\n')
                 continue
             if end_interval.date() > most_recent_date.date() or end_interval.date() < most_distant_date.date():
-                print('\n\nErro, a data de fim está fora do intervalo do dataset.\n\n')
+                print('\n\n################ Erro, a data de fim está fora do intervalo do dataset ################\n\n')
                 continue
             else:
                 break
@@ -125,7 +126,7 @@ def check_y_or_n(question):  # Função para perguntas sim/não
     while True:
         print(f"\n\n{question}")
         ans = input(
-            "\n\nDigite 'S' ou pressione 'ENTER' para sim, ou 'N' para não: ")
+            "\n----> Digite 'S' ou pressione 'ENTER' para sim, ou 'N' para não: ")
 
         if (ans == '') or (ans.upper() == 'S'):
             ans = True
@@ -205,7 +206,7 @@ def make_dirs(dataset_type, suffix):
 
     while True:
 
-        chosen_n = input("\n\nEscolha o número do arquivo a ser selecionado:")
+        chosen_n = input("\n----> Escolha o número do arquivo a ser selecionado:")
 
         try:
             chosen_n = int(chosen_n)
@@ -250,14 +251,14 @@ def make_dirs(dataset_type, suffix):
 
 def choose_function(options_dir):
 
-    print("\n\nSelecione as opções de processamento:\n\n")
+    print("\n\n################ Selecione as opções de processamento: #################\n\n")
     for num, option in options_dir.items():
         print(f"{num}: {option}\n")
 
     while True:
         try:
 
-            chosen_option = input("Digite o número da opção selecionada: ")
+            chosen_option = input("----> Digite o número da opção selecionada: ")
 
             chosen_option = int(chosen_option)
 
@@ -308,28 +309,30 @@ def clean_articles():
     while True:
 
         # Listando as opções para que o usuário crie um dataset customizado
-        print("A seguir, serão apresentadas as opções para montar um dataset de saída customizado. O dataset resultante conterá somente os campos selecionados.\n")
-        print("--------Você pode selecionar mais do que uma opção, basta separar os números com vírgula:--------\n")
-        print("***********PARA SELECIONAR TODAS AS OPÇÕES ABAIXO, PRESSIONE A TECLA 'ENTER'***********\n\n")
-
-        print(f"{selectable_options[0]} ---- Link da matéria original.")
-        print(f"{selectable_options[1]} ---- Links de outras matérias que foram referenciadas no texto do artigo.")
-        print(f"{selectable_options[2]} ---- Título.")
-        print(f"{selectable_options[3]} ---- Subtítulo.")
-        print(f"{selectable_options[4]} ---- Conteúdo do artigo, em texto.")
-        print(f"{selectable_options[5]} ---- Data de publicação da matéria.")
-        print(f"{selectable_options[6]} ---- Data de atualização da matéria.")
-        print(f"{selectable_options[7]} ---- Fonte.")
-        print(f"{selectable_options[8]} ---- Autor.")
+        print("\n\n############# A SEGUIR, SELECIONE OS CAMPOS PARA COMPOR O DATASET: #############\n")
+        
+        print(f"{selectable_options[0]}  ---- Link da matéria original.")
+        print(f"{selectable_options[1]}  ---- Links de outras matérias que foram referenciadas no texto do artigo.")
+        print(f"{selectable_options[2]}  ---- Título.")
+        print(f"{selectable_options[3]}  ---- Subtítulo.")
+        print(f"{selectable_options[4]}  ---- Conteúdo do artigo, em texto.")
+        print(f"{selectable_options[5]}  ---- Data de publicação da matéria.")
+        print(f"{selectable_options[6]}  ---- Data de atualização da matéria.")
+        print(f"{selectable_options[7]}  ---- Fonte.")
+        print(f"{selectable_options[8]}  ---- Autor.")
         print(f"{selectable_options[9]} ---- Imagens.")
         print(f"{selectable_options[10]} ---- Highlights.")
         print(f"{selectable_options[11]} ---- Olho.")
-        print(f"{selectable_options[12]} ---- Gerar arquivos de texto para cada matéria, este arquivo de texto conterá o texto do corpo da matéria.\nOs arquivos de texto serão salvos em uma pasta separada, o formato será do tipo .txt")
-        print(f"{selectable_options[13]} ---- Gerar um arquivo de texto fundindo o texto de todas as matérias.")
+        print(f"{selectable_options[12]} ---- Gerar arquivos de texto para cada matéria, este arquivo de texto conterá o texto do corpo da matéria.")
+        print(f"{selectable_options[13]} ---- Gerar um arquivo de texto combinando o texto de todas as matérias.")
         print(f"{selectable_options[14]} ---- Todas as opções acima, menos as opções '13' e '14' (não serão gerados arquivos de texto .txt).")
 
+        print("\n* Você pode selecionar mais do que uma opção, basta separar os números com vírgula. *")
+        print("* Para selecionar todas as opções acima, pressione ENTER. *")
+
+        
         sel_options = input(
-            "\n\nSelecione as opções desejadas, lembre-se que, caso haja mais de uma opção, você deve separar os números por vírgula: ")
+            "\n\n----> Selecione as opções desejadas: ")
 
         # Checando se existe algum caractere fora de números e ","
         if re.match(r"[^0-9,]+", sel_options):
@@ -338,7 +341,7 @@ def clean_articles():
 
         if sel_options == '':
             print(
-                "\n----Foram selecionadas todas as opções.----\n\n")
+                "\n* Foram selecionadas todas as opções. *")
             break
         
         #Checando se os números digitados são válidos
@@ -351,7 +354,7 @@ def clean_articles():
         
         else:
             
-            print(f'As opções selecionadas foram: {sel_options}\n\n')
+            print(f'\n* As opções selecionadas foram: {sel_options} *')
             break
 
     # Tratando os resultados
@@ -367,6 +370,8 @@ def clean_articles():
 
     # Criando dataframe de saída
     output_df = pd.DataFrame()
+    # Inicializando variável
+    select_parag = False
 
     # Reorganizando um novo dataframe a partir das opções selecionadas pelo usuário
     if '15' in options_list:
@@ -374,7 +379,7 @@ def clean_articles():
         options_list = ['1', '2', '3', '4', '5', '6', '7', '8','9','10','11','12','13','14']
         
     if '5' in options_list or '13' in options_list or '14' in options_list:
-        select_parag = check_y_or_n('Você gostaria de selecionar parágrafos específicos do texto do corpo da matéria?')
+        select_parag = check_y_or_n('----> Você gostaria de selecionar parágrafos específicos do texto do corpo da matéria?')
         
         if select_parag:            
                 while True:
@@ -382,10 +387,10 @@ def clean_articles():
                     print('1 --- Primeiro parágrafo.')
                     print('2 --- Primeiro e Segundo parágrafos.')
                     print('3 --- Primeiro, Segundo e Terceiro parágrafos.')
-                    num_prg = input('Resposta: ')
+                    num_prg = input('----> Resposta: ')
                     
                     if not num_prg:
-                        print('Erro: Nenhuma opção foi selecionada. Tente novamente.')
+                        print('* Erro: Nenhuma opção foi selecionada. Tente novamente. *')
                     
                     # Checando se existe algum caractere fora de números e ","
                     elif num_prg == '1':
@@ -580,7 +585,7 @@ def clean_articles():
             with open(path_out_txt, 'w', encoding="utf-8") as txt_file:
                 # st_contents.append(texto) #Salva numa lista de textos
                 txt_file.write(st_contents[i])
-        print(f'\nA pasta contendo os arquivos de texto para cada matéria se encontra em: "{dir_text_nm}"')
+        print(f'\n* A pasta contendo os arquivos de texto para cada matéria se encontra em: "{dir_text_nm}" *')
         
         
     if '14' in options_list:
@@ -598,7 +603,7 @@ def clean_articles():
             all_text = '\n\n\n'.join(st_contents)
             all_text = 'text\n' + all_text
             txt_file.write(all_text)
-        print(f'\nO arquivo único contendo todos os textos {search_term+".txt"} se encontra na pasta {x_dir_name}')
+        print(f'\n* O arquivo único contendo todos os textos {search_term+".txt"} se encontra na pasta {x_dir_name} *')
             
     # Determinando os nomes dos campos que estão disponíveis para serem ordenados pelo usuário
     chsn_fields = output_df.columns.values.tolist()
@@ -651,7 +656,7 @@ def clean_articles():
         return()
     
     ans_sort_yn = check_y_or_n(
-        "Você deseja ordenar o dataset de acordo com algum campo ou tipo de dado?")
+        "----> Você deseja ordenar o dataset de acordo com algum campo ou tipo de dado?")
 
     # Caso exista alguma data, o padrão seria ordenar pela data primeiro, mesmo sem a escolha específica do usuário
     if not ans_sort_yn:
@@ -680,20 +685,20 @@ def clean_articles():
     else:
         while True:
             # Listando as possíveis opções de seleção da ordenação
-            print("\n\nObservações:\n")
-            print("-> Quando selecionada a ordenação por algum elemento de texto, essa ordenação será por ordem alfabética.")
-            print("-> Quando selecionada a ordenação por um elemento de data, essa ordenação será por mais recente ou mais antigo.")
-            print("-> Quando selecionada a ordenação por um elemento numérico, essa ordenação será do menor para o menor ou do menor para o maior.")
+            print("\n\n****************OBSERVAÇÕES:****************\n")
+            print("- Quando selecionada a ordenação por algum elemento de texto, essa ordenação será por ordem alfabética.")
+            print("- Quando selecionada a ordenação por um elemento de data, essa ordenação será por mais recente ou mais antigo.")
+            print("- Quando selecionada a ordenação por um elemento numérico, essa ordenação será do menor para o menor ou do menor para o maior.")
 
             list_available_opt = list(range(1, len(chsn_fields) + 1))
             list_available_opt = [str(option) for option in list_available_opt]
 
-            print("\n\nEscolha qual será a categoria para ordenar o dataset:\n")
+            print("\n\n----> Escolha qual será a categoria para ordenar o dataset:\n")
 
             for i in range(len(chsn_fields)):
                 print(f'{i+1}- Por {selectable_fields[i]}')
 
-            ans_sort_id = input('Resposta: ')
+            ans_sort_id = input('\n\n----> Resposta: ')
 
             if ans_sort_id not in list_available_opt:
                 print("Escolha inválida, tente novamente.")
@@ -706,10 +711,10 @@ def clean_articles():
             f'\nA opção escolhida foi: {selectable_fields[ans_sort_id - 1]}\n')
 
         while True:
-            print("Escolha qual será o tipo de ordenação:\n\n")
+            print("----> Escolha qual será o tipo de ordenação:\n\n")
             print('1 - Ascendente.')
             print('2 - Descendente.')
-            ans_asc_desc = input('Resposta: ')
+            ans_asc_desc = input('----> Resposta: ')
 
             if ans_asc_desc not in ['1', '2']:
                 print("Escolha inválida, tente novamente.")
@@ -761,7 +766,7 @@ def clean_articles():
                      sep=';', encoding='utf-8-sig',
                      index=False, header=True)
 
-    print("\n\nO arquivo de saída gerado se encontra em:\n\n", path_out, "\n\n")
+    print("\n\n* O arquivo de saída gerado se encontra em:\n\n", path_out, " *\n\n")
 
     return()
 
@@ -820,7 +825,7 @@ def extract_urls():
     df_filtered.to_csv(
         path_or_buf=path_out, quotechar='"', sep=';', encoding='utf-8-sig', index=False, header=False)
 
-    print("\n\nO arquivo de saída gerado se encontra em:\n\n", path_out, "\n\n")
+    print("\n\n* O arquivo de saída gerado se encontra em:\n\n", path_out, " *\n\n")
 
     return()
 
@@ -860,7 +865,7 @@ def clean_search():
 
     # Requisitando a permissão do usuário para padronizar as datas temporais do dataset
 
-    ans_recent_date = check_y_or_n("O dataset de busca que será processado foi coletado há menos de 1h no Facepager?\n\n")
+    ans_recent_date = check_y_or_n("----> O dataset de busca que será processado foi coletado há menos de 1h no Facepager?\n\n")
    
     if ans_recent_date:
 
@@ -911,7 +916,7 @@ def clean_search():
         valid_for_crop = True
                
         #Verifica se o usuário gostaria de aproximar as datas
-        ans_approx_dates = check_y_or_n('Você gostaria de aproximar as datas relativas? (ex.:"há 1 hora", "há 2 dias")\n\n')
+        ans_approx_dates = check_y_or_n('----> Você gostaria de aproximar as datas relativas? (ex.:"há 1 hora", "há 2 dias")\n\n')
 
 
         #O usuário escolheu aproximar as datas relativas:
@@ -994,7 +999,7 @@ def clean_search():
                 df_filtered.at[i, 'object_id'] = link
                 
             
-            ans_keep_bad_dates = check_y_or_n('Você gostaria de manter as datas relativas originais? (ex.:"há 1 hora", "há 2 dias")\n Nesta opção, as datas imprecisas serão deletadas.\n')
+            ans_keep_bad_dates = check_y_or_n('----> Você gostaria de manter as datas relativas originais? (ex.:"há 1 hora", "há 2 dias")\n Nesta opção, as datas imprecisas serão deletadas.\n')
             
             #O escolheu não aproximar e quer manter as datas relativas
             if ans_keep_bad_dates:
@@ -1027,7 +1032,7 @@ def clean_search():
 
     # Checando se o usuário quer manter o cabeçalho
     ans = check_y_or_n(
-        'Você deseja manter o cabeçalho do arquivo .csv? (A primeira linha, com o nome das opções escolhidas.)')
+        '----> Você deseja manter o cabeçalho do arquivo .csv? (A primeira linha, com o nome das opções escolhidas.)')
     
     df_filtered = df_filtered.drop_duplicates(subset = 'titulo', ignore_index = True)
     # Se o usuário pediu para manter o cabeçalho:
@@ -1042,27 +1047,14 @@ def clean_search():
         df_filtered.to_csv(
             path_or_buf=path_out, quotechar='"', sep=';', encoding='utf-8-sig', index=False, header=False)
 
-    print("\n\nO arquivo de saída gerado se encontra em:\n\n", path_out, "\n\n")
+    print("\n\n* O arquivo de saída gerado se encontra em:\n\n", path_out, " *\n\n")
 
 
 lista_sites = ["G1"]
 proc_options = {
-    1:
-    """
-    Quero utilizar um dataset (arquivo .csv) do Facepager OBTIDO PELA BUSCA DE UMA PALAVRA-CHAVE no site selecionado acima.
-    Esta opção irá gerar um novo DATASET COM TODOS OS LINKS DAS MATÉRIAS que foram buscadas pelo Facepager.
-    """,
-    2:
-    """
-    Quero utilizar um dataset (arquivo .csv) do Facepager OBTIDO PELA BUSCA DE UMA PALAVRA-CHAVE no site selecionado acima.
-    Esta opção irá gerar um dataset com as INFORMAÇÕES RESUMIDAS DA MATÉRIA (título, data e um pequeno resumo).
-    """,
-    3:
-    """
-    Quero utilizar um dataset (arquivo .csv) do Facepager obtido por uma lista de links de matérias.
-    Nesta opção, AS INFORMAÇÕES EXTRAÍDAS DIRETAMENTE DOS ARTIGOS serão formatadas e processadas em um novo dataset.
-    O usuário pode fazer a ESCOLHA DE QUAIS INFORMAÇÕES SERÃO ARMAZENADAS NO NOVO DATASET (data, subtitulo, texto integral, etc.)
-    """
+    1:"Gerar dataset com os links das matérias.",
+    2:"Gerar dataset com informações dos resultados de uma busca.",
+    3:"Gerar dataset com informações dos artigos integrais."
 }
 
 print("\n\n****ESTE SCRIPT IRÁ PROCESSAR OS DATASETS GERADOS POR SCRAPING DE WEBSITES UTILIZANDO O FACEPAGER****\n")
@@ -1077,7 +1069,7 @@ while True:
     while True:
         try:
 
-            chosen_website = input("Digite o número do website selecionado:")
+            chosen_website = input("----> Digite o número do website selecionado:")
 
             chosen_website = int(chosen_website)
 
@@ -1094,7 +1086,7 @@ while True:
 
     # Verificando se o usuário digitou uma resposta válida
     ans = check_y_or_n(
-        "\n\nVocê gostaria de utilizar novamente o programa ou acessar outras funções?")
+        "\n\n----> Você gostaria de utilizar novamente o programa ou acessar outras funções?")
 
     # Definindo a próxima ação de acordo com a escolha do usuário
     if ans:
